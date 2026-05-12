@@ -24,7 +24,6 @@
 
 package com.example.demo;
 
-import com.yubico.internal.util.CollectionUtil;
 import com.yubico.webauthn.data.RelyingPartyIdentity;
 import com.yubico.webauthn.extension.appid.AppId;
 import com.yubico.webauthn.extension.appid.InvalidAppIdException;
@@ -53,7 +52,7 @@ public class Config {
     private final Optional<AppId> appId;
 
     private Config(Set<String> origins, int port, RelyingPartyIdentity rpIdentity, Optional<AppId> appId) {
-        this.origins = CollectionUtil.immutableSet(origins);
+        this.origins = Collections.unmodifiableSet(new HashSet<>(origins));
         this.port = port;
         this.rpIdentity = rpIdentity;
         this.appId = appId;
@@ -140,15 +139,9 @@ public class Config {
             resultBuilder.id(id);
         }
 
-        if (icon == null) {
-            logger.debug("RP icon not given - using none.");
-        } else {
-            try {
-            resultBuilder.icon(Optional.of(new URL(icon)));
-            } catch (MalformedURLException e) {
-                logger.error("Invalid icon URL: {}", icon, e);
-                throw e;
-            }
+        // Note: icon property was removed in webauthn-server-core 2.x
+        if (icon != null) {
+            logger.warn("RP icon property is no longer supported in webauthn-server-core 2.x and will be ignored");
         }
 
         final RelyingPartyIdentity result = resultBuilder.build();
