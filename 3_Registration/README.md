@@ -112,11 +112,10 @@ Let's update the startRegistration() method to configure the authenticator selec
                 rp.startRegistration(
                     StartRegistrationOptions.builder()
                         .user(user)
-                        .authenticatorSelection(Optional.of(AuthenticatorSelectionCriteria.builder()
-                            .requireResidentKey(requireResidentKey)
-                            .authenticatorAttachment(AuthenticatorAttachment.CROSS_PLATFORM)    // Default to roaming security keys (CROSS_PLATFORM). Comment out this line to enable either PLATFORM or CROSS_PLATFORM authenticators
+                        .authenticatorSelection(AuthenticatorSelectionCriteria.builder()
+                            .residentKey(requireResidentKey ? com.yubico.webauthn.data.ResidentKeyRequirement.REQUIRED : com.yubico.webauthn.data.ResidentKeyRequirement.DISCOURAGED)
                             .build()
-                        ))
+                        )
                         .build()
                 )
             );
@@ -154,7 +153,7 @@ Using a YubiKey is ideal for development environments such as this. If your Yubi
 <details>
 <summary><strong>Step-by-step instructions (expand to enable platform authenticator registration)</strong></summary><p>
 
-To configure the WebAuthn Server to accept platform authenticators, such as Windows Hello comment out the `.authenticatorAttachment(AuthenticatorAttachment.CROSS_PLATFORM)` line. This workshop recommends that only test platform authenticators be registered as the instructions to remove invalid credentials from platform authenticators are not available at this time. E.g. Don't use your primary Windows Hello platform authenticator in this workshop.
+To configure the WebAuthn Server to accept platform authenticators, you can use the `AuthenticatorAttachment` property of the `AuthenticatorSelectionCriteria`. This workshop recommends that only test platform authenticators be registered as the instructions to remove invalid credentials from platform authenticators are not available at this time. E.g. Don't use your primary Windows Hello platform authenticator in this workshop.
 ```java
     ...
     RegistrationRequest request = new RegistrationRequest(
@@ -164,11 +163,10 @@ To configure the WebAuthn Server to accept platform authenticators, such as Wind
                 rp.startRegistration(
                     StartRegistrationOptions.builder()
                         .user(user)
-                        .authenticatorSelection(Optional.of(AuthenticatorSelectionCriteria.builder()
-                            .requireResidentKey(requireResidentKey)
-                            //.authenticatorAttachment(AuthenticatorAttachment.CROSS_PLATFORM)    // Default to roaming security keys (CROSS_PLATFORM). Comment out this line to enable either PLATFORM or CROSS_PLATFORM authenticators
+                        .authenticatorSelection(AuthenticatorSelectionCriteria.builder()
+                            .residentKey(requireResidentKey ? com.yubico.webauthn.data.ResidentKeyRequirement.REQUIRED : com.yubico.webauthn.data.ResidentKeyRequirement.DISCOURAGED)
                             .build()
-                        ))
+                        )
                         .build()
                 )
             );

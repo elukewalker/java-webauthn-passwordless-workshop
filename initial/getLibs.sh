@@ -7,7 +7,7 @@ cd tmp
 git clone https://github.com/Yubico/java-webauthn-server.git
 
 git fetch https://github.com/Yubico/java-webauthn-server.git
-git -C java-webauthn-server checkout tags/1.2.0
+git -C java-webauthn-server checkout tags/2.9.0
 
 # Copy the webauthn-server-demo data package to the project
 cp -r java-webauthn-server/webauthn-server-demo/src/main/java/demo/webauthn/data ../src/main/java/com/example/demo
