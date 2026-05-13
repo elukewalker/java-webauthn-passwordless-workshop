@@ -60,13 +60,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.yubico</groupId>
-			<artifactId>webauthn-server-attestation</artifactId>
-			<!--Check for the latest version at Maven Central-->
-			<version>2.9.0</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>32.1.3-jre</version>
