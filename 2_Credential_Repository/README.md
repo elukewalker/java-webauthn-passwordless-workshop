@@ -87,7 +87,7 @@ We will be using some resources from the webauthn-server-demo in our project.
 2. Open `getLibs.sh` or `getLibs.ps1` in your editor take a look at what it does
     1. First it clones the java-webauthn-server repo
     2. Next the webauthn-server-demo data and yubico packages are copied to the project
-    3. Then the AuthenticatedAction, Config, InMemoryRegistrationStorage, and RegistrationStorage, preview metadata, lib, and js content are copied to the project
+    3. Then the AuthenticatedAction, Config, InMemoryRegistrationStorage, and RegistrationStorage, lib, and js content are copied to the project
     4. Finally, the webauthn-server-demo package names and renamed to match our project structure. Some of the java files that were copied over had an incorrect package name. For each file we replace 'demo.webauthn' with 'com.example.demo'. 
 3. Run the getLibs script
    
@@ -143,11 +143,6 @@ the server will report.  Example: `YUBICO_WEBAUTHN_RP_ID=demo.yubico.com`
 the server will report. Example: `YUBICO_WEBAUTHN_RP_ID='Yubico Web
 Authentication demo'`
 
-- `YUBICO_WEBAUTHN_RP_ICON`: An optional URL to an
-[icon](https://www.w3.org/TR/webauthn/#dom-publickeycredentialentity-icon) to
-represent this Relying Party. Example:
-`YUBICO_WEBAUTHN_RP_ICON='https://www.yubico.com/wp-content/uploads/2014/09/favicon.ico'`
-
 **InMemoryRegistrationStorage.java**
 
 The `InMemoryRegistrationStorage` implements the `RegistrationStorage` and `CredentialRepository` interfaces and stores credential registrations in memory.
@@ -172,7 +167,7 @@ The `js` and `lib` folders contain javascript libraries which help process the W
 
 **preview-metadata.json**
 
-The `preview-metadata.json` stores metadata for known/trusted authenticators.
+The `preview-metadata.json` file is included for legacy compatibility but is no longer used by java-webauthn-server 2.x. Attestation metadata features were removed in version 2.0.
 
 </p></details>
 

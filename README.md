@@ -31,7 +31,7 @@ You'll start with a java web application that secures access to a page with a lo
 ## What you'll need:
 * [Git](https://git-scm.com/)
 * [Docker](https://docs.docker.com/install/)
-* [JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/index.html) or later
+* [JDK 17](https://www.oracle.com/technetwork/java/javase/downloads/index.html) or later
 * [Maven 3.2](https://maven.apache.org/download.cgi)+
 * FIDO2 Compatible browser
   * MacOS: [Safari Technical Preview](https://developer.apple.com/safari/technology-preview/) version 71+
@@ -51,7 +51,7 @@ The authenticator makes credentials, generates cryptographic proof of user authe
 The client is the bridge between the authenticator and the server. It implements the FIDO2 Client to Authenticator Protocol (CTAP) and the WebAuthn API. The client could be a browser exposing the WebAuthn API to web applications, or an OS subsystem exposing a platform-specific FIDO2 API to native applications such as mobile or desktop apps.
 
 **Server:**
-The server, also know as Relying Party or RP, consists conceptually of at least a web server and the server-side portions of a web application, plus a WebAuthn server. The WebAuthn server has a trust store, containing the (public) trust anchors for the attestation of FIDO2 Authenticators. Note: a trust store is needed only if RP cares about attestation metadata.
+The server, also known as Relying Party or RP, consists conceptually of at least a web server and the server-side portions of a web application, plus a WebAuthn server. The WebAuthn server provides core WebAuthn registration and authentication functionality.
 
 See the diagram below for a depiction of the server architecture
 ![alt text](./images/serverarchitecture.png "Server Architecture")

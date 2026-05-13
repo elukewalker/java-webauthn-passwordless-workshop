@@ -4,7 +4,7 @@ This section outlines the prerequisites to complete the workshop and instruction
 ## Prerequisites
 In order to complete this workshop you will need a development environment with the following:
 * [Git](https://git-scm.com/)
-* [JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/index.html) or later
+* [JDK 17](https://www.oracle.com/technetwork/java/javase/downloads/index.html) or later
 * [Maven 3.2](https://maven.apache.org/download.cgi)+
 * FIDO2 compatible platform / browser
   * Chrome 67+, Firefox 60+, Safari 14+, or Edge (all modern browsers support WebAuthn natively)

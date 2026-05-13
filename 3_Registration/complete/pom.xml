@@ -113,7 +113,7 @@
 					<region>${REGION}</region> <!--e.g. centralus -->
 
 					<!-- Java Runtime Stack for Web App on Linux-->
-					<linuxRuntime>jre8</linuxRuntime>
+					<linuxRuntime>java17</linuxRuntime>
 				</configuration>
 			</plugin>
 			<plugin>
