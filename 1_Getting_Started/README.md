@@ -7,8 +7,7 @@ In order to complete this workshop you will need a development environment with 
 * [JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/index.html) or later
 * [Maven 3.2](https://maven.apache.org/download.cgi)+
 * FIDO2 compatible platform / browser
-  * MacOS: [Safari Technical Preview](https://developer.apple.com/safari/technology-preview/) version 71+
-  * Windows 10 Version 1809+: Edge
+  * Chrome 67+, Firefox 60+, Safari 14+, or Edge (all modern browsers support WebAuthn natively)
 * A favorite text editor or IDE
 * A security key
 

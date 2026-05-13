@@ -27,17 +27,9 @@ Serialize `request` to JSON and send it to the client:
 
 ```java
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
-@Bean 
-public ObjectMapper objectMapper() {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new Jdk8Module());
-    mapper.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
-    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    mapper.setSerializationInclusion(Include.NON_NULL);
-    mapper.setSerializationInclusion(Include.NON_ABSENT);
-    return mapper;
-}
+private final ObjectMapper jsonMapper = new ObjectMapper().registerModule(new Jdk8Module());
 ```
 
 Get the response from the client:
@@ -78,7 +70,7 @@ This section will walk through how to customize the WebAuthn Server registration
 
 The webauthn-server-demo project has the concept of `AuthenticatedActions`. We will not be using `AuthenticatedActions` in this demo. Instead, we will use the Spring Security user session. First, a user will log in with a traditional username and password then register resident credential on a security key. This resident credential will enable usernameless passwordless authentication in the next module.
 
-The current startRegistration() method only allows a single security key to be registered. Let's update it so that a user can add multiple security keys.
+Let's update the startRegistration() method to configure the authenticator selection criteria and resident key requirements. Note: The WebAuthnServer class also includes a `startAddCredential()` method for adding multiple security keys to an existing user, but that functionality is not exposed via the REST controller in this workshop.
 
 1. Open the `./src/main/java/com/example/demo/WebAuthnServer.java` class in your editor and 
 2. Add the following import:
@@ -144,25 +136,12 @@ The current startRegistration() method only allows a single security key to be r
 
 1. Add the following to the import section of the `./src/main/java/com/example/demo/WebAuthnServer.java` class
 ```java
-import org.springframework.context.annotation.Bean;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 ```
-2. Add the following method to the `./src/main/java/com/example/demo/WebAuthnServer.java` class. The ObjectMapper is configured to handle Optional types and not serialize fields to JSON that are null or absent.
+2. Add the following field to the `./src/main/java/com/example/demo/WebAuthnServer.java` class. The ObjectMapper is configured to handle Optional types.
 ```java
-@Bean 
-public ObjectMapper objectMapper() {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new Jdk8Module());
-    mapper.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
-    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    mapper.setSerializationInclusion(Include.NON_NULL);
-    mapper.setSerializationInclusion(Include.NON_ABSENT);
-    return mapper;
-}
+private final ObjectMapper jsonMapper = new ObjectMapper().registerModule(new Jdk8Module());
 ```
 
 </p></details>

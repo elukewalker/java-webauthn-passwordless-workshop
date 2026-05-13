@@ -142,6 +142,8 @@ Let's expose two REST endpoints to start and finish the WebAuthn authentication 
         .anyRequest().authenticated()
 ```
 
+</p></details>
+
 ### Integrate WebAuthn API into application
 1. Open the `./src/main/resources/templates/login.html` template
 2. Add the following code in the header section
