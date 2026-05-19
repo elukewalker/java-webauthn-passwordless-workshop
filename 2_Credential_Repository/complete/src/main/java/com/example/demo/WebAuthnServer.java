@@ -42,21 +42,14 @@ import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.StartAssertionOptions;
 import com.yubico.webauthn.StartRegistrationOptions;
 import com.yubico.webauthn.U2fVerifier;
-import com.yubico.webauthn.attestation.Attestation;
-import com.yubico.webauthn.attestation.AttestationResolver;
-import com.yubico.webauthn.attestation.MetadataObject;
-import com.yubico.webauthn.attestation.MetadataService;
-import com.yubico.webauthn.attestation.StandardMetadataService;
-import com.yubico.webauthn.attestation.TrustResolver;
-import com.yubico.webauthn.attestation.resolver.CompositeAttestationResolver;
-import com.yubico.webauthn.attestation.resolver.CompositeTrustResolver;
-import com.yubico.webauthn.attestation.resolver.SimpleAttestationResolver;
-import com.yubico.webauthn.attestation.resolver.SimpleTrustResolverWithEquality;
+// Attestation framework overhauled in v2.x - old imports removed
+// RelyingParty now handles attestation validation internally
 import com.yubico.webauthn.data.AttestationConveyancePreference;
 import com.yubico.webauthn.data.AuthenticatorSelectionCriteria;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
 import com.yubico.webauthn.data.RelyingPartyIdentity;
+import com.yubico.webauthn.data.ResidentKeyRequirement;
 import com.yubico.webauthn.data.UserIdentity;
 import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
@@ -103,18 +96,9 @@ public class WebAuthnServer {
     private final RegistrationStorage userStorage;
     private final Cache<AssertionRequestWrapper, AuthenticatedAction> authenticatedActions = newCache();
 
-
-    private final TrustResolver trustResolver = new CompositeTrustResolver(Arrays.asList(
-        StandardMetadataService.createDefaultTrustResolver(),
-        createExtraTrustResolver()
-    ));
-
-    private final MetadataService metadataService = new StandardMetadataService(
-        new CompositeAttestationResolver(Arrays.asList(
-            StandardMetadataService.createDefaultAttestationResolver(trustResolver),
-            createExtraMetadataResolver(trustResolver)
-        ))
-    );
+    // Attestation framework overhauled in v2.x
+    // Old MetadataService and TrustResolver setup removed
+    // RelyingParty now handles attestation validation internally via AttestationTrustSource
 
     private final Clock clock = Clock.systemDefaultZone();
     private final ObjectMapper jsonMapper = WebAuthnCodecs.json();
@@ -135,8 +119,9 @@ public class WebAuthnServer {
             .credentialRepository(this.userStorage)
             .origins(origins)
             .attestationConveyancePreference(Optional.of(AttestationConveyancePreference.DIRECT))
-            .metadataService(Optional.of(metadataService))
-            .allowUnrequestedExtensions(true)
+            // metadataService replaced with attestationTrustSource in v2.x
+            // For workshop purposes, using default (no custom trust roots)
+            // allowUnrequestedExtensions removed in v2.x - now always enabled
             .allowUntrustedAttestation(true)
             .validateSignatureCounter(true)
             .appId(appId)
@@ -149,40 +134,9 @@ public class WebAuthnServer {
         return new ByteArray(bytes);
     }
 
-    private static MetadataObject readPreviewMetadata() {
-        InputStream is = WebAuthnServer.class.getResourceAsStream(PREVIEW_METADATA_PATH);
-        try {
-            return WebAuthnCodecs.json().readValue(is, MetadataObject.class);
-        } catch (IOException e) {
-            throw ExceptionUtil.wrapAndLog(logger, "Failed to read metadata from " + PREVIEW_METADATA_PATH, e);
-        } finally {
-            Closeables.closeQuietly(is);
-        }
-    }
-
-    /**
-     * Create a {@link TrustResolver} that accepts attestation certificates that are directly recognised as trust anchors.
-     */
-    private static TrustResolver createExtraTrustResolver() {
-        try {
-            MetadataObject metadata = readPreviewMetadata();
-            return new SimpleTrustResolverWithEquality(metadata.getParsedTrustedCertificates());
-        } catch (CertificateException e) {
-            throw ExceptionUtil.wrapAndLog(logger, "Failed to read trusted certificate(s)", e);
-        }
-    }
-
-    /**
-     * Create a {@link AttestationResolver} with additional metadata for unreleased YubiKey Preview devices.
-     */
-    private static AttestationResolver createExtraMetadataResolver(TrustResolver trustResolver) {
-        try {
-            MetadataObject metadata = readPreviewMetadata();
-            return new SimpleAttestationResolver(Collections.singleton(metadata), trustResolver);
-        } catch (CertificateException e) {
-            throw ExceptionUtil.wrapAndLog(logger, "Failed to read trusted certificate(s)", e);
-        }
-    }
+    // Attestation metadata methods removed in v2.x migration
+    // Custom attestation trust sources can be configured via RelyingParty.builder().attestationTrustSource()
+    // For workshop purposes, using default trust configuration
 
     private static <K, V> Cache<K, V> newCache() {
         return CacheBuilder.newBuilder()
@@ -213,7 +167,7 @@ public class WebAuthnServer {
                             .build()
                         )
                         .authenticatorSelection(AuthenticatorSelectionCriteria.builder()
-                            .requireResidentKey(requireResidentKey)
+                            .residentKey(requireResidentKey ? ResidentKeyRequirement.REQUIRED : ResidentKeyRequirement.DISCOURAGED)
                             .build()
                         )
                         .build()
@@ -254,7 +208,7 @@ public class WebAuthnServer {
                         StartRegistrationOptions.builder()
                             .user(existingUser)
                             .authenticatorSelection(AuthenticatorSelectionCriteria.builder()
-                                .requireResidentKey(requireResidentKey)
+                                .residentKey(requireResidentKey ? ResidentKeyRequirement.REQUIRED : ResidentKeyRequirement.DISCOURAGED)
                                 .build()
                             )
                             .build()

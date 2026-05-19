@@ -140,15 +140,9 @@ public class Config {
             resultBuilder.id(id);
         }
 
-        if (icon == null) {
-            logger.debug("RP icon not given - using none.");
-        } else {
-            try {
-            resultBuilder.icon(Optional.of(new URL(icon)));
-            } catch (MalformedURLException e) {
-                logger.error("Invalid icon URL: {}", icon, e);
-                throw e;
-            }
+        // Icon field removed in WebAuthn Level 2 (java-webauthn-server 2.x)
+        if (icon != null) {
+            logger.warn("RP icon specified but ignored - icon field removed in WebAuthn Level 2. Value was: {}", icon);
         }
 
         final RelyingPartyIdentity result = resultBuilder.build();
