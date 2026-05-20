@@ -1,0 +1,15 @@
+# gstack agent artifacts
+.gstack/
+
+# Maven
+target/
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# macOS
+.DS_Store
