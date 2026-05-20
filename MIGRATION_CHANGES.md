@@ -122,6 +122,55 @@ All Lombok annotations MUST be preserved:
 
 **Previous failure**: Lombok annotations were removed and Maven cached old generated classes, causing build to appear successful when it wasn't. Always use `mvn clean` to prevent this.
 
+## Java 25 Compatibility
+
+### Issue
+Java 25's stricter annotation processor requirements caused Lombok `@Value`/`@Builder` annotations to fail silently when the annotation processor wasn't explicitly configured. This manifested as compilation errors:
+- `constructor RegistrationRequest cannot be applied to given types`
+- `cannot find symbol: method getRequestId()`
+
+Lombok wasn't generating constructors or getters because the annotation processor wasn't being invoked.
+
+### Fix Applied - All 3 complete/ Modules
+Added to each `pom.xml`:
+
+1. **Explicit Lombok annotation processor configuration:**
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.46</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
+```
+
+2. **Maven compiler release property for reproducible cross-platform builds:**
+```xml
+<maven.compiler.release>17</maven.compiler.release>
+```
+
+This ensures consistent compilation regardless of the developer's installed JDK version (8, 17, 21, 25, etc.).
+
+### U2fRegistrationResult.java Lombok Fix
+Fixed Lombok `@Builder` + `@NonNull` final fields compatibility:
+- Added `@Builder(toBuilder = true)` annotation parameter
+- Removed explicit `private final` modifiers (redundant since `@Value` already makes fields final)
+
+This resolved the issue where `@Value` + `@Builder` with explicit modifiers on `@NonNull` fields generated a no-arg constructor stub that couldn't initialize the final fields.
+
+### Verification
+All modules now build successfully with Java 25:
+```bash
+JAVA_HOME=/opt/java-25 mvn clean test -B -f <module>/pom.xml
+```
+
 ## Migration Guide Reference
 
 Official guide: https://developers.yubico.com/java-WebAuthn-Server/Migrating_from_v1.html

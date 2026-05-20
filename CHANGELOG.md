@@ -24,3 +24,6 @@ You can now use this workshop with the latest java-webauthn-server 2.9.0 library
 ### Fixed
 - Completed v2.x API migration for workshop modules 2 (Credential Repository) and 4 (Authentication)
 - Preserved all Lombok annotations critical for workshop build process
+- Java 25 compatibility: Added explicit maven-compiler-plugin configuration with Lombok annotation processor paths to ensure Lombok `@Value`/`@Builder` annotations work correctly on Java 25 (stricter annotation processing requirements)
+- Cross-JDK reproducible builds: Added `maven.compiler.release=17` property to all modules, ensuring consistent compilation regardless of installed JDK version (8, 17, 21, 25, etc.)
+- Fixed Lombok `@Builder` + `@NonNull` final fields compatibility issue in U2fRegistrationResult.java by adding `@Builder(toBuilder=true)` and removing redundant field modifiers
