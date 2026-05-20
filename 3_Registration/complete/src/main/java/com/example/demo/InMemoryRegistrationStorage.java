@@ -26,7 +26,6 @@ package com.example.demo;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.yubico.internal.util.CollectionUtil;
 import com.yubico.webauthn.AssertionResult;
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RegisteredCredential;
@@ -34,6 +33,7 @@ import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
 import com.example.demo.data.CredentialRegistration;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -171,7 +171,7 @@ public class InMemoryRegistrationStorage implements RegistrationStorage, Credent
 
     @Override
     public Set<RegisteredCredential> lookupAll(ByteArray credentialId) {
-        return CollectionUtil.immutableSet(
+        return Collections.unmodifiableSet(
             storage.asMap().values().stream()
                 .flatMap(Collection::stream)
                 .filter(reg -> reg.getCredential().getCredentialId().equals(credentialId))

@@ -25,9 +25,7 @@
 package com.yubico.webauthn;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.yubico.internal.util.CertificateParser;
-import com.yubico.internal.util.ExceptionUtil;
-import com.yubico.internal.util.WebAuthnCodecs;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.exception.Base64UrlException;
 import com.yubico.webauthn.extension.appid.AppId;
@@ -36,28 +34,49 @@ import com.example.demo.data.U2fRegistrationResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 public class U2fVerifier {
 
-    private static final BouncyCastleCrypto crypto = new BouncyCastleCrypto();
+    private static final ObjectMapper jsonMapper = new ObjectMapper();
+
+    private static ByteArray sha256(String data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return new ByteArray(digest.digest(data.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    private static ByteArray sha256(ByteArray data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return new ByteArray(digest.digest(data.getBytes()));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
 
     public static boolean verify(AppId appId,  RegistrationRequest request, U2fRegistrationResponse response) throws CertificateException, IOException, Base64UrlException {
-        final ByteArray appIdHash = crypto.hash(appId.getId());
-        final ByteArray clientDataHash = crypto.hash(response.getCredential().getU2fResponse().getClientDataJSON());
+        final ByteArray appIdHash = sha256(appId.getId());
+        final ByteArray clientDataHash = sha256(response.getCredential().getU2fResponse().getClientDataJSON());
 
-        final JsonNode clientData = WebAuthnCodecs.json().readTree(response.getCredential().getU2fResponse().getClientDataJSON().getBytes());
+        final JsonNode clientData = jsonMapper.readTree(response.getCredential().getU2fResponse().getClientDataJSON().getBytes());
         final String challengeBase64 = clientData.get("challenge").textValue();
 
-        ExceptionUtil.assure(
-            request.getPublicKeyCredentialCreationOptions().getChallenge().equals(ByteArray.fromBase64Url(challengeBase64)),
-            "Wrong challenge."
-        );
+        if (!request.getPublicKeyCredentialCreationOptions().getChallenge().equals(ByteArray.fromBase64Url(challengeBase64))) {
+            throw new IllegalArgumentException("Wrong challenge.");
+        }
 
         InputStream attestationCertAndSignatureStream = new ByteArrayInputStream(response.getCredential().getU2fResponse().getAttestationCertAndSignature().getBytes());
 
-        final X509Certificate attestationCert = CertificateParser.parseDer(attestationCertAndSignatureStream);
+        final X509Certificate attestationCert = (X509Certificate) CertificateFactory.getInstance("X.509")
+            .generateCertificate(attestationCertAndSignatureStream);
 
         byte[] signatureBytes = new byte[attestationCertAndSignatureStream.available()];
         attestationCertAndSignatureStream.read(signatureBytes);

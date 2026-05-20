@@ -453,7 +453,7 @@ public class WebAuthnServer {
                             request,
                             response,
                             userStorage.getRegistrationsByUsername(result.getUsername()),
-                            result.getWarnings()
+                            Collections.emptyList() // warnings removed in java-webauthn-server 2.x
                         )
                     );
                 } else {
@@ -550,8 +550,7 @@ public class WebAuthnServer {
                 .userHandle(userIdentity.getId())
                 .publicKeyCose(result.getPublicKeyCose())
                 .signatureCount(response.getCredential().getResponse().getParsedAuthenticatorData().getSignatureCounter())
-                .build(),
-            result.getAttestationMetadata()
+                .build()
         );
     }
 

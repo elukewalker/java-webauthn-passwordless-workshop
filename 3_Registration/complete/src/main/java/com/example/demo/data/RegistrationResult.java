@@ -1,12 +1,8 @@
 package com.example.demo.data;
 
-import com.yubico.webauthn.attestation.Attestation;
 import com.yubico.webauthn.data.AttestationType;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -26,13 +22,9 @@ public class RegistrationResult {
     @NonNull
     private final ByteArray publicKeyCose;
 
-    @NonNull
-    @Builder.Default
-    private final List<String> warnings = Collections.emptyList();
-
-    @NonNull
-    @Builder.Default
-    private final Optional<Attestation> attestationMetadata = Optional.empty();
+    // warnings and attestationMetadata removed in java-webauthn-server 2.x
+    // Warnings are now logged via SLF4J instead of returned
+    // Attestation metadata handling moved to internal RelyingParty implementation
 
     public static RegistrationResult fromLibraryType(com.yubico.webauthn.RegistrationResult result) {
         return builder()
@@ -40,8 +32,6 @@ public class RegistrationResult {
             .attestationTrusted(result.isAttestationTrusted())
             .attestationType(result.getAttestationType())
             .publicKeyCose(result.getPublicKeyCose())
-            .warnings(result.getWarnings())
-            .attestationMetadata(result.getAttestationMetadata())
             .build();
     }
 
