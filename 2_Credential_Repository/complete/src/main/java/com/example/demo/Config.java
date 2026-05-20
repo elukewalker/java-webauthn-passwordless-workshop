@@ -24,7 +24,6 @@
 
 package com.example.demo;
 
-import com.yubico.internal.util.CollectionUtil;
 import com.yubico.webauthn.data.RelyingPartyIdentity;
 import com.yubico.webauthn.extension.appid.AppId;
 import com.yubico.webauthn.extension.appid.InvalidAppIdException;
@@ -53,7 +52,7 @@ public class Config {
     private final Optional<AppId> appId;
 
     private Config(Set<String> origins, int port, RelyingPartyIdentity rpIdentity, Optional<AppId> appId) {
-        this.origins = CollectionUtil.immutableSet(origins);
+        this.origins = Collections.unmodifiableSet(new HashSet<>(origins));
         this.port = port;
         this.rpIdentity = rpIdentity;
         this.appId = appId;
