@@ -8,16 +8,16 @@ import lombok.NonNull;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class U2fRegistrationResult {
 
     @NonNull
-    private final PublicKeyCredentialDescriptor keyId;
+    PublicKeyCredentialDescriptor keyId;
 
-    private final boolean attestationTrusted;
+    boolean attestationTrusted;
 
     @NonNull
-    private final ByteArray publicKeyCose;
+    ByteArray publicKeyCose;
 
     // warnings field removed in v2.x - warnings now logged via SLF4J
     // attestationMetadata field removed in v2.x migration
