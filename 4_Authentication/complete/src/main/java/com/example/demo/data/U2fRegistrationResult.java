@@ -1,32 +1,24 @@
 package com.example.demo.data;
 
-import com.yubico.webauthn.attestation.Attestation;
+// Attestation import removed in v2.x - attestation validation now internal to RelyingParty
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class U2fRegistrationResult {
 
     @NonNull
-    private final PublicKeyCredentialDescriptor keyId;
+    PublicKeyCredentialDescriptor keyId;
 
-    private final boolean attestationTrusted;
-
-    @NonNull
-    private final ByteArray publicKeyCose;
+    boolean attestationTrusted;
 
     @NonNull
-    @Builder.Default
-    private final List<String> warnings = Collections.emptyList();
+    ByteArray publicKeyCose;
 
-    @NonNull
-    @Builder.Default
-    private final Optional<Attestation> attestationMetadata = Optional.empty();
+    // warnings field removed in v2.x - warnings now logged via SLF4J
+    // attestationMetadata field removed in v2.x migration
 }

@@ -81,9 +81,10 @@ The webauthn-server-demo project has the concept of `AuthenticatedActions`. We w
 The current startRegistration() method only allows a single security key to be registered. Let's update it so that a user can add multiple security keys.
 
 1. Open the `./src/main/java/com/example/demo/WebAuthnServer.java` class in your editor and 
-2. Add the following import:
+2. Add the following imports:
    ```
    import com.yubico.webauthn.data.AuthenticatorAttachment;
+   import com.yubico.webauthn.data.ResidentKeyRequirement;
    ```
 3. Modify the startRegistration() method to look like this:
     ```java
@@ -121,7 +122,7 @@ The current startRegistration() method only allows a single security key to be r
                     StartRegistrationOptions.builder()
                         .user(user)
                         .authenticatorSelection(Optional.of(AuthenticatorSelectionCriteria.builder()
-                            .requireResidentKey(requireResidentKey)
+                            .residentKey(requireResidentKey ? ResidentKeyRequirement.REQUIRED : ResidentKeyRequirement.DISCOURAGED)
                             .authenticatorAttachment(AuthenticatorAttachment.CROSS_PLATFORM)    // Default to roaming security keys (CROSS_PLATFORM). Comment out this line to enable either PLATFORM or CROSS_PLATFORM authenticators
                             .build()
                         ))
@@ -186,7 +187,7 @@ To configure the WebAuthn Server to accept platform authenticators, such as Wind
                     StartRegistrationOptions.builder()
                         .user(user)
                         .authenticatorSelection(Optional.of(AuthenticatorSelectionCriteria.builder()
-                            .requireResidentKey(requireResidentKey)
+                            .residentKey(requireResidentKey ? ResidentKeyRequirement.REQUIRED : ResidentKeyRequirement.DISCOURAGED)
                             //.authenticatorAttachment(AuthenticatorAttachment.CROSS_PLATFORM)    // Default to roaming security keys (CROSS_PLATFORM). Comment out this line to enable either PLATFORM or CROSS_PLATFORM authenticators
                             .build()
                         ))

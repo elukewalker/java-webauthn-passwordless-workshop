@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.1.4.RELEASE</version>
+		<version>2.7.18</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
@@ -16,6 +16,7 @@
 
 	<properties>
 		<java.version>1.8</java.version>
+		<maven.compiler.release>17</maven.compiler.release>
 	</properties>
 
 	<dependencies>
@@ -35,6 +36,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
+			<version>1.18.46</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -55,26 +57,51 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.2.3</version>
+			<version>1.2.13</version>
 		</dependency>
 		<dependency>
 			<groupId>com.yubico</groupId>
 			<artifactId>webauthn-server-core</artifactId>
 			<!--Check for the latest version at Maven Central-->
-			<version>1.2.0</version>
+			<version>2.9.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.yubico</groupId>
 			<artifactId>webauthn-server-attestation</artifactId>
 			<!--Check for the latest version at Maven Central-->
-			<version>1.2.0</version>
+			<version>2.9.0</version>
 			<scope>compile</scope>
+		</dependency>
+		<!-- BouncyCastle for EdDSA support on Java 8 -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>1.70</version>
+		</dependency>
+		<!-- Guava for caching -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>31.1-jre</version>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>1.18.46</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -83,7 +110,7 @@
 				<groupId>com.microsoft.azure</groupId>
 				<artifactId>azure-webapp-maven-plugin</artifactId>
 				<!--Check for the latest version at Maven Central-->
-				<version>1.6.0</version>
+				<version>2.13.0</version>
 				<configuration>
 					<deploymentType>jar</deploymentType>
 

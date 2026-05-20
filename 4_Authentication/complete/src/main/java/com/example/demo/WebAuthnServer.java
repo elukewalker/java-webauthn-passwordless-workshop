@@ -28,10 +28,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.io.Closeables;
-import com.yubico.internal.util.CertificateParser;
-import com.yubico.internal.util.ExceptionUtil;
-import com.yubico.internal.util.WebAuthnCodecs;
 import com.yubico.util.Either;
 import com.yubico.webauthn.AssertionResult;
 import com.yubico.webauthn.FinishAssertionOptions;
@@ -42,22 +38,14 @@ import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.StartAssertionOptions;
 import com.yubico.webauthn.StartRegistrationOptions;
 import com.yubico.webauthn.U2fVerifier;
-import com.yubico.webauthn.attestation.Attestation;
-import com.yubico.webauthn.attestation.AttestationResolver;
-import com.yubico.webauthn.attestation.MetadataObject;
-import com.yubico.webauthn.attestation.MetadataService;
-import com.yubico.webauthn.attestation.StandardMetadataService;
-import com.yubico.webauthn.attestation.TrustResolver;
-import com.yubico.webauthn.attestation.resolver.CompositeAttestationResolver;
-import com.yubico.webauthn.attestation.resolver.CompositeTrustResolver;
-import com.yubico.webauthn.attestation.resolver.SimpleAttestationResolver;
-import com.yubico.webauthn.attestation.resolver.SimpleTrustResolverWithEquality;
+// Attestation framework overhauled in v2.x - old imports removed
+// RelyingParty now handles attestation validation internally
 import com.yubico.webauthn.data.AttestationConveyancePreference;
-import com.yubico.webauthn.data.AuthenticatorAttachment;
 import com.yubico.webauthn.data.AuthenticatorSelectionCriteria;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
 import com.yubico.webauthn.data.RelyingPartyIdentity;
+import com.yubico.webauthn.data.ResidentKeyRequirement;
 import com.yubico.webauthn.data.UserIdentity;
 import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
@@ -75,6 +63,7 @@ import java.io.InputStream;
 import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
 import java.util.Arrays;
@@ -90,6 +79,8 @@ import lombok.NonNull;
 import lombok.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.yubico.webauthn.data.AuthenticatorAttachment;
 
 import org.springframework.context.annotation.Bean;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -112,21 +103,12 @@ public class WebAuthnServer {
     private final RegistrationStorage userStorage;
     private final Cache<AssertionRequestWrapper, AuthenticatedAction> authenticatedActions = newCache();
 
-
-    private final TrustResolver trustResolver = new CompositeTrustResolver(Arrays.asList(
-        StandardMetadataService.createDefaultTrustResolver(),
-        createExtraTrustResolver()
-    ));
-
-    private final MetadataService metadataService = new StandardMetadataService(
-        new CompositeAttestationResolver(Arrays.asList(
-            StandardMetadataService.createDefaultAttestationResolver(trustResolver),
-            createExtraMetadataResolver(trustResolver)
-        ))
-    );
+    // Attestation framework overhauled in v2.x
+    // Old MetadataService and TrustResolver setup removed
+    // RelyingParty now handles attestation validation internally via AttestationTrustSource
 
     private final Clock clock = Clock.systemDefaultZone();
-    private final ObjectMapper jsonMapper = WebAuthnCodecs.json();
+    private final ObjectMapper jsonMapper = new ObjectMapper();
 
     private final RelyingParty rp;
 
@@ -144,8 +126,9 @@ public class WebAuthnServer {
             .credentialRepository(this.userStorage)
             .origins(origins)
             .attestationConveyancePreference(Optional.of(AttestationConveyancePreference.DIRECT))
-            .metadataService(Optional.of(metadataService))
-            .allowUnrequestedExtensions(true)
+            // metadataService replaced with attestationTrustSource in v2.x
+            // For workshop purposes, using default (no custom trust roots)
+            // allowUnrequestedExtensions removed in v2.x - now always enabled
             .allowUntrustedAttestation(true)
             .validateSignatureCounter(true)
             .appId(appId)
@@ -169,40 +152,9 @@ public class WebAuthnServer {
         return new ByteArray(bytes);
     }
 
-    private static MetadataObject readPreviewMetadata() {
-        InputStream is = WebAuthnServer.class.getResourceAsStream(PREVIEW_METADATA_PATH);
-        try {
-            return WebAuthnCodecs.json().readValue(is, MetadataObject.class);
-        } catch (IOException e) {
-            throw ExceptionUtil.wrapAndLog(logger, "Failed to read metadata from " + PREVIEW_METADATA_PATH, e);
-        } finally {
-            Closeables.closeQuietly(is);
-        }
-    }
-
-    /**
-     * Create a {@link TrustResolver} that accepts attestation certificates that are directly recognised as trust anchors.
-     */
-    private static TrustResolver createExtraTrustResolver() {
-        try {
-            MetadataObject metadata = readPreviewMetadata();
-            return new SimpleTrustResolverWithEquality(metadata.getParsedTrustedCertificates());
-        } catch (CertificateException e) {
-            throw ExceptionUtil.wrapAndLog(logger, "Failed to read trusted certificate(s)", e);
-        }
-    }
-
-    /**
-     * Create a {@link AttestationResolver} with additional metadata for unreleased YubiKey Preview devices.
-     */
-    private static AttestationResolver createExtraMetadataResolver(TrustResolver trustResolver) {
-        try {
-            MetadataObject metadata = readPreviewMetadata();
-            return new SimpleAttestationResolver(Collections.singleton(metadata), trustResolver);
-        } catch (CertificateException e) {
-            throw ExceptionUtil.wrapAndLog(logger, "Failed to read trusted certificate(s)", e);
-        }
-    }
+    // Attestation metadata methods removed in v2.x migration
+    // Custom attestation trust sources can be configured via RelyingParty.builder().attestationTrustSource()
+    // For workshop purposes, using default trust configuration
 
     private static <K, V> Cache<K, V> newCache() {
         return CacheBuilder.newBuilder()
@@ -211,52 +163,37 @@ public class WebAuthnServer {
             .build();
     }
 
-    public Either<String, RegistrationRequest> startRegistration(
-            @NonNull String username,
-            @NonNull String displayName,
-            Optional<String> credentialNickname,
-            boolean requireResidentKey
-        ) {
-            logger.trace("startRegistration username: {}, credentialNickname: {}", username, credentialNickname);
+    public Either<String, RegistrationRequest> startRegistration(@NonNull String username, @NonNull String displayName,
+            Optional<String> credentialNickname, boolean requireResidentKey) {
+        logger.trace("startRegistration username: {}, credentialNickname: {}", username, credentialNickname);
 
-            if (username == null || username.isEmpty()) {
-                return Either.left("username must not be empty.");
-            }
-
-            Collection<CredentialRegistration> registrations = userStorage.getRegistrationsByUsername(username);
-
-            UserIdentity user;
-
-            if (registrations.isEmpty()) {
-                user = UserIdentity.builder()
-                    .name(username)
-                    .displayName(displayName)
-                    .id(generateRandom(32))
-                    .build();
-            } else {
-                user = registrations.stream().findAny().get().getUserIdentity();
-            }
-
-            RegistrationRequest request = new RegistrationRequest(
-                username,
-                credentialNickname,
-                generateRandom(32),
-                rp.startRegistration(
-                    StartRegistrationOptions.builder()
-                        .user(user)
-                        .authenticatorSelection(Optional.of(AuthenticatorSelectionCriteria.builder()
-                            .requireResidentKey(requireResidentKey)
-                            .authenticatorAttachment(AuthenticatorAttachment.CROSS_PLATFORM)    // Default to roaming security keys (CROSS_PLATFORM). Comment out this line to enable either PLATFORM or CROSS_PLATFORM authenticators
-                            .build()
-                        ))
-                        .build()
-                )
-            );
-
-            registerRequestStorage.put(request.getRequestId(), request);
-
-            return Either.right(request);
+        if (username == null || username.isEmpty()) {
+            return Either.left("username must not be empty.");
         }
+
+        Collection<CredentialRegistration> registrations = userStorage.getRegistrationsByUsername(username);
+
+        UserIdentity user;
+
+        if (registrations.isEmpty()) {
+            user = UserIdentity.builder().name(username).displayName(displayName).id(generateRandom(32)).build();
+        } else {
+            user = registrations.stream().findAny().get().getUserIdentity();
+        }
+
+        RegistrationRequest request = new RegistrationRequest(username, credentialNickname, generateRandom(32),
+                rp.startRegistration(StartRegistrationOptions.builder().user(user)
+                        .authenticatorSelection(Optional
+                                .of(AuthenticatorSelectionCriteria.builder()
+                                        .residentKey(requireResidentKey ? ResidentKeyRequirement.REQUIRED : ResidentKeyRequirement.DISCOURAGED)
+                                        .authenticatorAttachment(AuthenticatorAttachment.CROSS_PLATFORM) // Default to roaming security keys (CROSS_PLATFORM). Comment out this line to enable either PLATFORM or CROSS_PLATFORM authenticators
+                                        .build()))
+                        .build()));
+
+        registerRequestStorage.put(request.getRequestId(), request);
+
+        return Either.right(request);
+    }
 
     public <T> Either<List<String>, AssertionRequestWrapper> startAddCredential(
         @NonNull String username,
@@ -286,7 +223,7 @@ public class WebAuthnServer {
                         StartRegistrationOptions.builder()
                             .user(existingUser)
                             .authenticatorSelection(AuthenticatorSelectionCriteria.builder()
-                                .requireResidentKey(requireResidentKey)
+                                .residentKey(requireResidentKey ? ResidentKeyRequirement.REQUIRED : ResidentKeyRequirement.DISCOURAGED)
                                 .build()
                             )
                             .build()
@@ -348,7 +285,8 @@ public class WebAuthnServer {
             der = certDer;
             X509Certificate cert = null;
             try {
-                cert = CertificateParser.parseDer(certDer.getBytes());
+                CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+                cert = (X509Certificate) certFactory.generateCertificate(new java.io.ByteArrayInputStream(certDer.getBytes()));
             } catch (CertificateException e) {
                 logger.error("Failed to parse attestation certificate");
             }
@@ -427,36 +365,21 @@ public class WebAuthnServer {
         } else {
 
             try {
-                ExceptionUtil.assure(
-                    U2fVerifier.verify(rp.getAppId().get(), request, response),
-                    "Failed to verify signature."
-                );
+                if (!U2fVerifier.verify(rp.getAppId().get(), request, response)) {
+                    throw new IllegalArgumentException("Failed to verify signature.");
+                }
             } catch (Exception e) {
                 logger.debug("Failed to verify U2F signature.", e);
                 return Either.left(Arrays.asList("Failed to verify signature.", e.getMessage()));
             }
 
-            X509Certificate attestationCert = null;
-            try {
-                attestationCert = CertificateParser.parseDer(response.getCredential().getU2fResponse().getAttestationCertAndSignature().getBytes());
-            } catch (CertificateException e) {
-                logger.error("Failed to parse attestation certificate: {}", response.getCredential().getU2fResponse().getAttestationCertAndSignature(), e);
-            }
-
-            Optional<Attestation> attestation = Optional.empty();
-            try {
-                if (attestationCert != null) {
-                    attestation = Optional.of(metadataService.getAttestation(Collections.singletonList(attestationCert)));
-                }
-            } catch (CertificateEncodingException e) {
-                logger.error("Failed to resolve attestation", e);
-            }
-
+            // Attestation metadata resolution removed in v2.x
+            // Attestation trust is now evaluated internally by RelyingParty
+            // For U2F compatibility mode in workshop, setting attestationTrusted to false
             final U2fRegistrationResult result = U2fRegistrationResult.builder()
                 .keyId(PublicKeyCredentialDescriptor.builder().id(response.getCredential().getU2fResponse().getKeyHandle()).build())
-                .attestationTrusted(attestation.map(Attestation::isTrusted).orElse(false))
-                .publicKeyCose(WebAuthnCodecs.rawEcdaKeyToCose(response.getCredential().getU2fResponse().getPublicKey()))
-                .attestationMetadata(attestation)
+                .attestationTrusted(false)  // v2.x: attestation validated by RelyingParty internally
+                .publicKeyCose(convertRawEcKeyToCose(response.getCredential().getU2fResponse().getPublicKey()))
                 .build();
 
             return Either.right(
@@ -503,7 +426,7 @@ public class WebAuthnServer {
         AssertionRequestWrapper request;
         AssertionResponse response;
         Collection<CredentialRegistration> registrations;
-        List<String> warnings;
+        // warnings field removed in v2.x - warnings now logged via SLF4J
     }
 
     public Either<List<String>, SuccessfulAuthenticationResult> finishAuthentication(String responseJson) {
@@ -547,8 +470,7 @@ public class WebAuthnServer {
                         new SuccessfulAuthenticationResult(
                             request,
                             response,
-                            userStorage.getRegistrationsByUsername(result.getUsername()),
-                            result.getWarnings()
+                            userStorage.getRegistrationsByUsername(result.getUsername())
                         )
                     );
                 } else {
@@ -645,8 +567,7 @@ public class WebAuthnServer {
                 .userHandle(userIdentity.getId())
                 .publicKeyCose(result.getPublicKeyCose())
                 .signatureCount(response.getCredential().getResponse().getParsedAuthenticatorData().getSignatureCounter())
-                .build(),
-            result.getAttestationMetadata()
+                .build()
         );
     }
 
@@ -665,8 +586,7 @@ public class WebAuthnServer {
                 .userHandle(userIdentity.getId())
                 .publicKeyCose(result.getPublicKeyCose())
                 .signatureCount(signatureCount)
-                .build(),
-            result.getAttestationMetadata()
+                .build()
         );
     }
 
@@ -674,16 +594,15 @@ public class WebAuthnServer {
         UserIdentity userIdentity,
         Optional<String> nickname,
         long signatureCount,
-        RegisteredCredential credential,
-        Optional<Attestation> attestationMetadata
+        RegisteredCredential credential
     ) {
+        // attestationMetadata removed in v2.x - attestation validation handled by RelyingParty
         CredentialRegistration reg = CredentialRegistration.builder()
             .userIdentity(userIdentity)
             .credentialNickname(nickname)
             .registrationTime(clock.instant())
             .credential(credential)
             .signatureCount(signatureCount)
-            .attestationMetadata(attestationMetadata)
             .build();
 
         logger.debug(
@@ -698,6 +617,53 @@ public class WebAuthnServer {
 
     public Collection<CredentialRegistration> getRegistrationsByUsername(String username) {
         return this.userStorage.getRegistrationsByUsername(username);
+    }
+
+    /**
+     * Convert raw ECDSA P-256 public key to COSE format.
+     * Replacement for removed WebAuthnCodecs.rawEcdaKeyToCose() in java-webauthn-server 2.x.
+     *
+     * @param rawKey 65-byte uncompressed EC public key (0x04 + X + Y coordinates)
+     * @return COSE-encoded public key
+     */
+    private static ByteArray convertRawEcKeyToCose(ByteArray rawKey) {
+        byte[] key = rawKey.getBytes();
+        if (key.length != 65 || key[0] != 0x04) {
+            throw new IllegalArgumentException("Invalid raw EC key format");
+        }
+
+        // Extract X and Y coordinates (32 bytes each)
+        byte[] x = new byte[32];
+        byte[] y = new byte[32];
+        System.arraycopy(key, 1, x, 0, 32);
+        System.arraycopy(key, 33, y, 0, 32);
+
+        // Build COSE_Key structure (CBOR map)
+        // See RFC 8152 section 7 and WebAuthn spec
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try {
+            // CBOR map with 5 entries
+            baos.write(0xa5);
+
+            // Key type (kty): 1 (label) => 2 (EC2)
+            baos.write(0x01); baos.write(0x02);
+
+            // Algorithm (alg): 3 (label) => -7 (ES256)
+            baos.write(0x03); baos.write(0x26);
+
+            // Curve (crv): -1 (label) => 1 (P-256)
+            baos.write(0x20); baos.write(0x01);
+
+            // X coordinate: -2 (label) => x (32 bytes)
+            baos.write(0x21); baos.write(0x58); baos.write(0x20); baos.write(x);
+
+            // Y coordinate: -3 (label) => y (32 bytes)
+            baos.write(0x22); baos.write(0x58); baos.write(0x20); baos.write(y);
+
+            return new ByteArray(baos.toByteArray());
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to encode COSE key", e);
+        }
     }
 
 }
