@@ -76,6 +76,12 @@ Open the ```pom.xml``` and add the webauthn-server-core and webauthn-server-atte
     <artifactId>bcprov-jdk15on</artifactId>
     <version>1.70</version>
 </dependency>
+<dependency>
+    <groupId>com.google.guava</groupId>
+    <artifactId>guava</artifactId>
+    <version>32.1.3-jre</version>
+    <scope>compile</scope>
+</dependency>
 ```
 
 ### Create a credential repository
