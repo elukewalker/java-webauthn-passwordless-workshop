@@ -24,8 +24,16 @@
 
 package com.example.demo;
 
+import com.example.demo.data.AssertionRequestWrapper;
+import com.example.demo.data.AssertionResponse;
+import com.example.demo.data.CredentialRegistration;
+import com.example.demo.data.RegistrationRequest;
+import com.example.demo.data.RegistrationResponse;
+import com.example.demo.data.U2fRegistrationResponse;
+import com.example.demo.data.U2fRegistrationResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.yubico.util.Either;
@@ -38,8 +46,6 @@ import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.StartAssertionOptions;
 import com.yubico.webauthn.StartRegistrationOptions;
 import com.yubico.webauthn.U2fVerifier;
-// Attestation framework overhauled in v2.x - old imports removed
-// RelyingParty now handles attestation validation internally
 import com.yubico.webauthn.data.AttestationConveyancePreference;
 import com.yubico.webauthn.data.AuthenticatorSelectionCriteria;
 import com.yubico.webauthn.data.ByteArray;
@@ -51,17 +57,9 @@ import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
 import com.yubico.webauthn.extension.appid.AppId;
 import com.yubico.webauthn.extension.appid.InvalidAppIdException;
-import com.example.demo.data.AssertionRequestWrapper;
-import com.example.demo.data.AssertionResponse;
-import com.example.demo.data.CredentialRegistration;
-import com.example.demo.data.RegistrationRequest;
-import com.example.demo.data.RegistrationResponse;
-import com.example.demo.data.U2fRegistrationResponse;
-import com.example.demo.data.U2fRegistrationResult;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.SecureRandom;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -93,12 +91,8 @@ public class WebAuthnServer {
     private final RegistrationStorage userStorage;
     private final Cache<AssertionRequestWrapper, AuthenticatedAction> authenticatedActions = newCache();
 
-    // Attestation framework overhauled in v2.x
-    // Old MetadataService and TrustResolver setup removed
-    // RelyingParty now handles attestation validation internally via AttestationTrustSource
-
     private final Clock clock = Clock.systemDefaultZone();
-    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper jsonMapper;
 
     private final RelyingParty rp;
 
@@ -111,14 +105,14 @@ public class WebAuthnServer {
         this.registerRequestStorage = registerRequestStorage;
         this.assertRequestStorage = assertRequestStorage;
 
+        this.jsonMapper = new ObjectMapper();
+        this.jsonMapper.registerModule(new Jdk8Module());
+
         rp = RelyingParty.builder()
             .identity(rpIdentity)
             .credentialRepository(this.userStorage)
             .origins(origins)
             .attestationConveyancePreference(Optional.of(AttestationConveyancePreference.DIRECT))
-            // metadataService replaced with attestationTrustSource in v2.x
-            // For workshop purposes, using default (no custom trust roots)
-            // allowUnrequestedExtensions removed in v2.x - now always enabled
             .allowUntrustedAttestation(true)
             .validateSignatureCounter(true)
             .appId(appId)
@@ -130,10 +124,6 @@ public class WebAuthnServer {
         random.nextBytes(bytes);
         return new ByteArray(bytes);
     }
-
-    // Attestation metadata methods removed in v2.x migration
-    // Custom attestation trust sources can be configured via RelyingParty.builder().attestationTrustSource()
-    // For workshop purposes, using default trust configuration
 
     private static <K, V> Cache<K, V> newCache() {
         return CacheBuilder.newBuilder()
@@ -268,7 +258,7 @@ public class WebAuthnServer {
             X509Certificate cert = null;
             try {
                 CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-                cert = (X509Certificate) certFactory.generateCertificate(new java.io.ByteArrayInputStream(certDer.getBytes()));
+                cert = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certDer.getBytes()));
             } catch (CertificateException e) {
                 logger.error("Failed to parse attestation certificate");
             }

@@ -24,16 +24,16 @@
 
 package com.yubico.webauthn;
 
+import com.example.demo.data.RegistrationRequest;
+import com.example.demo.data.U2fRegistrationResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.exception.Base64UrlException;
 import com.yubico.webauthn.extension.appid.AppId;
-import com.example.demo.data.RegistrationRequest;
-import com.example.demo.data.U2fRegistrationResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -47,7 +47,7 @@ public class U2fVerifier {
     private static ByteArray sha256(String data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return new ByteArray(digest.digest(data.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            return new ByteArray(digest.digest(data.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 algorithm not available", e);
         }

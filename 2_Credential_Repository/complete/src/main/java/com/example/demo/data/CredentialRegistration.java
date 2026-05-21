@@ -27,7 +27,6 @@ package com.example.demo.data;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yubico.webauthn.RegisteredCredential;
-// Attestation import removed in v2.x - attestation validation now internal to RelyingParty
 import com.yubico.webauthn.data.UserIdentity;
 import java.time.Instant;
 import java.util.Optional;
@@ -48,9 +47,6 @@ public class CredentialRegistration {
     @JsonIgnore
     Instant registrationTime;
     RegisteredCredential credential;
-
-    // attestationMetadata field removed in v2.x migration
-    // Attestation trust status available via RegistrationResult.isAttestationTrusted()
 
     @JsonProperty("registrationTime")
     public String getRegistrationTimestamp() {
