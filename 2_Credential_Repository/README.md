@@ -50,7 +50,7 @@ Windows 10 example of multiple credentials on a security key. The top choice is 
 
 
 ### Dependency configuration
-Open the ```pom.xml``` and add the webauthn-server-core and webauthn-server-attestation dependencies. The workshop is known to work with version 2.9.0 of the java-webauthn-server.
+Open the ```pom.xml``` and add the webauthn-server-core dependency and supporting libraries. The workshop is known to work with version 2.9.0 of the java-webauthn-server.
 ```xml
 <dependency>
     <groupId>ch.qos.logback</groupId>
@@ -60,13 +60,6 @@ Open the ```pom.xml``` and add the webauthn-server-core and webauthn-server-atte
 <dependency>
     <groupId>com.yubico</groupId>
     <artifactId>webauthn-server-core</artifactId>
-    <!--Check for the latest version at Maven Central-->
-    <version>2.9.0</version>
-    <scope>compile</scope>
-</dependency>
-<dependency>
-    <groupId>com.yubico</groupId>
-    <artifactId>webauthn-server-attestation</artifactId>
     <!--Check for the latest version at Maven Central-->
     <version>2.9.0</version>
     <scope>compile</scope>

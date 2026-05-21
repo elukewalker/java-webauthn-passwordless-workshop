@@ -9,10 +9,11 @@ This document tracks all code changes made to migrate from java-webauthn-server 
 All pom.xml files updated:
 - Spring Boot: 2.1.4.RELEASE → 2.7.18
 - java-webauthn-server-core: 1.2.0 → 2.9.0
-- java-webauthn-server-attestation: 1.2.0 → 2.9.0
+- java-webauthn-server-attestation: 1.2.0 → 2.9.0 (later removed in v0.0.2.0 as unused)
 - Lombok: (inherited) → 1.18.46 (explicit)
 - logback-classic: 1.2.3 → 1.2.13
 - azure-webapp-maven-plugin: 1.6.0 → 2.13.0
+- Guava: 31.1-jre → 32.1.3-jre (updated in v0.0.2.0)
 - **Added**: BouncyCastle 1.70 (for EdDSA support on Java 8)
 
 ## Code Changes - Module 3 (3_Registration/complete)
@@ -93,7 +94,7 @@ All modules have been validated:
 
 1. ✅ Module 4 (4_Authentication) migration fixes applied - COMPLETE
 2. ✅ Module 2 (2_Credential_Repository) migration fixes applied - COMPLETE
-3. README may reference old dependency versions - needs check
+3. ✅ README dependency references updated to match v0.0.2.0 (webauthn-server-attestation removed, Guava updated)
 4. Build must be tested with `mvn clean` to catch Lombok issues
 5. Initial module (initial/) only has dependency updates, no code changes needed (no webauthn usage)
 
