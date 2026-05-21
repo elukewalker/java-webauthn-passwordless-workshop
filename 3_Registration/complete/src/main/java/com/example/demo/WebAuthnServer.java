@@ -600,7 +600,6 @@ public class WebAuthnServer {
         long signatureCount,
         RegisteredCredential credential
     ) {
-        // attestationMetadata removed in v2.x - attestation validation handled by RelyingParty
         CredentialRegistration reg = CredentialRegistration.builder()
             .userIdentity(userIdentity)
             .credentialNickname(nickname)
