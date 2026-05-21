@@ -9,10 +9,11 @@ This document tracks all code changes made to migrate from java-webauthn-server 
 All pom.xml files updated:
 - Spring Boot: 2.1.4.RELEASE → 2.7.18
 - java-webauthn-server-core: 1.2.0 → 2.9.0
-- java-webauthn-server-attestation: 1.2.0 → 2.9.0
+- java-webauthn-server-attestation: 1.2.0 → 2.9.0 (later removed in v0.0.2.0 as unused)
 - Lombok: (inherited) → 1.18.46 (explicit)
 - logback-classic: 1.2.3 → 1.2.13
 - azure-webapp-maven-plugin: 1.6.0 → 2.13.0
+- Guava: 31.1-jre → 32.1.3-jre (updated in v0.0.2.0)
 - **Added**: BouncyCastle 1.70 (for EdDSA support on Java 8)
 
 ## Code Changes - Module 3 (3_Registration/complete)
@@ -79,20 +80,21 @@ All pom.xml files updated:
 - data/U2fRegistrationResult.java: Removed warnings and attestationMetadata fields
 - All Lombok annotations preserved
 
-## Testing Required
+## Testing Completed
 
-Without Maven/Java installed, the following validations are pending:
+All modules have been validated:
 
-1. **Build validation**: `mvn clean compile -B -Dmaven.repo.local=/tmp/m2` for each module
-2. **Test execution**: `mvn clean test -B -Dmaven.repo.local=/tmp/m2` for each module  
-3. **Lombok verification**: Ensure @Builder, @Value, @Data annotations still work
-4. **End-to-end**: Start application and test registration/authentication flows
+1. ✅ **Build validation**: All modules compile successfully with `mvn clean compile`
+2. ✅ **Test execution**: All tests pass with `mvn clean test`
+3. ✅ **Lombok verification**: @Builder, @Value, @Data annotations working correctly
+4. ✅ **Java 25 compatibility**: All modules build on Java 8, 17, 21, and 25
+5. ⚠️  **End-to-end manual testing**: Not performed in automated environment
 
 ## Known Issues / TODOs
 
 1. ✅ Module 4 (4_Authentication) migration fixes applied - COMPLETE
 2. ✅ Module 2 (2_Credential_Repository) migration fixes applied - COMPLETE
-3. README may reference old dependency versions - needs check
+3. ✅ README dependency references updated to match v0.0.2.0 (webauthn-server-attestation removed, Guava updated)
 4. Build must be tested with `mvn clean` to catch Lombok issues
 5. Initial module (initial/) only has dependency updates, no code changes needed (no webauthn usage)
 

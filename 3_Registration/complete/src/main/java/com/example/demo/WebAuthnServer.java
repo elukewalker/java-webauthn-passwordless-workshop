@@ -59,6 +59,7 @@ import com.example.demo.data.RegistrationResponse;
 import com.example.demo.data.U2fRegistrationResponse;
 import com.example.demo.data.U2fRegistrationResult;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
@@ -108,7 +109,7 @@ public class WebAuthnServer {
     // RelyingParty now handles attestation validation internally via AttestationTrustSource
 
     private final Clock clock = Clock.systemDefaultZone();
-    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper jsonMapper;
 
     private final RelyingParty rp;
 
@@ -120,6 +121,9 @@ public class WebAuthnServer {
         this.userStorage = userStorage;
         this.registerRequestStorage = registerRequestStorage;
         this.assertRequestStorage = assertRequestStorage;
+
+        this.jsonMapper = new ObjectMapper();
+        this.jsonMapper.registerModule(new Jdk8Module());
 
         rp = RelyingParty.builder()
             .identity(rpIdentity)

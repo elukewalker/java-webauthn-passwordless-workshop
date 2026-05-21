@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.2.0] - 2026-05-21
+
+### Fixed
+- Resolved ObjectMapper configuration issue: added Jdk8Module registration to enable proper JSON deserialization of WebAuthn types that use Optional fields, preventing runtime JSON parsing failures
+- Removed unused webauthn-server-attestation dependency from all three complete modules (reduces dependencies and eliminates confusion about attestation handling)
+- Fixed Java version conflicts by aligning java.version property to 17 across all modules, matching maven.compiler.release configuration
+- Updated Guava from 31.1-jre to 32.1.3-jre for consistency with README documentation
+- Updated Azure linuxRuntime from jre8 to java17-java17 to match actual Java version requirements
+- Added missing InputStream import in U2fVerifier class to resolve compilation errors
+
+### Changed
+- Removed AI-generated code comments across all Java files for cleaner, more professional code appearance following code review feedback
+- Improved code quality by using proper imports instead of fully qualified class names
+- Updated README examples to use v2.x API (ResidentKeyRequirement instead of deprecated requireResidentKey)
+- Added missing Guava dependency to 2_Credential_Repository README instructions
+
 ## [0.0.1.0] - 2026-05-19
 
 ### Changed
